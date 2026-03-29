@@ -38,7 +38,8 @@ In the repository root:
 | File | Description |
 |------|-------------|
 | `sample-valid.abc` | Valid ABC: header `123`, one `A1C` block, footer `789`. |
-| `sample.abc` | Contains an invalid block (`AFC`); sanitization replaces that block with `A255C`. |
+| `sample.abc` | Malicious example (`AFC` in the body); sanitization replaces that block with `A255C` → output `123A1CA3CA255C789`. |
+| `sample-invalid.abc` | Invalid structure (body between header/footer not a multiple of 3 bytes); API returns **400**. |
 
 ### Example: sanitize (local)
 
