@@ -1,0 +1,20 @@
+@SanitizeService.Api_HostAddress = http://localhost:5149
+
+### Sanitize upload (multipart form field name must be "file")
+# Path is relative to this .http file: repo root sample.abc
+POST {{SanitizeService.Api_HostAddress}}/sanitize
+Content-Type: multipart/form-data; boundary=----SanitizeFormBoundary
+
+------SanitizeFormBoundary
+Content-Disposition: form-data; name="file"; filename="sample.abc"
+Content-Type: application/octet-stream
+
+< ../../../sample.abc
+------SanitizeFormBoundary--
+
+###
+
+### Swagger UI (Development)
+# GET {{SanitizeService.Api_HostAddress}}/swagger/index.html
+
+###

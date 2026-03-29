@@ -1,0 +1,34 @@
+# Build results
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio / VS Code
+.vs/
+*.user
+*.userosscache
+*.suo
+*.sln.docstates
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Rider
+.idea/
+*.sln.iml
+
+# User-specific / local
+*.local.json
+appsettings.*.local.json
+secrets.json
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Test / coverage
+TestResults/
+coverage*.json
+coverage*.xml
