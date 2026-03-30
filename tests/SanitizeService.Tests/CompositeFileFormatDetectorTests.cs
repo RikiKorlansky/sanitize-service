@@ -6,6 +6,7 @@ namespace SanitizeService.Tests;
 
 public sealed class CompositeFileFormatDetectorTests
 {
+    private static readonly AbcSanitizationSettings Settings = AbcSanitizationSettings.Create("123", "789", 3, 1, 9);
     /// <summary>
     /// Leaves the stream offset after reading; composite must still rewind before the next probe.
     /// </summary>
@@ -27,7 +28,7 @@ public sealed class CompositeFileFormatDetectorTests
         IFileFormatProbe[] probes =
         [
             new NonRewindingProbe(),
-            new AbcFormatProbe(NullLogger<AbcFormatProbe>.Instance),
+            new AbcFormatProbe(Settings, NullLogger<AbcFormatProbe>.Instance),
         ];
         var composite = new CompositeFileFormatDetector(probes);
 

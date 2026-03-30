@@ -1,4 +1,5 @@
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using SanitizeService.Application;
 using SanitizeService.Domain;
 
@@ -13,6 +14,17 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddSanitization(this IServiceCollection services)
     {
         services.AddSingleton<SeekableStreamEnsurer>();
+
+        services.AddSingleton(sp =>
+        {
+            var options = sp.GetRequiredService<IOptions<SanitizationOptions>>().Value;
+            return AbcSanitizationSettings.Create(
+                options.AbcHeaderSignature,
+                options.AbcFooterSignature,
+                options.AbcBlockSize,
+                options.AbcValidDigitMin,
+                options.AbcValidDigitMax);
+        });
 
         services.AddSingleton<IFileFormatProbe, AbcFormatProbe>();
         services.AddSingleton<IFileFormatDetector, CompositeFileFormatDetector>();

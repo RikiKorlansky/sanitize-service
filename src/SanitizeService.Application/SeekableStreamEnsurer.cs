@@ -10,6 +10,7 @@ namespace SanitizeService.Application;
 /// </summary>
 public sealed class SeekableStreamEnsurer
 {
+    private const int StreamBufferSize = 64 * 1024;
     private readonly ILogger<SeekableStreamEnsurer> _logger;
     private readonly SanitizationOptions _options;
 
@@ -43,10 +44,10 @@ public sealed class SeekableStreamEnsurer
                          FileMode.Create,
                          FileAccess.Write,
                          FileShare.None,
-                         bufferSize: 65536,
+                         bufferSize: StreamBufferSize,
                          FileOptions.Asynchronous | FileOptions.SequentialScan))
         {
-            var buffer = new byte[65536];
+            var buffer = new byte[StreamBufferSize];
             long total = 0;
             int read;
             while ((read = await input.ReadAsync(buffer.AsMemory(0, buffer.Length), cancellationToken)) > 0)
@@ -68,7 +69,7 @@ public sealed class SeekableStreamEnsurer
             FileMode.Open,
             FileAccess.ReadWrite,
             FileShare.Read,
-            bufferSize: 65536,
+            bufferSize: StreamBufferSize,
             FileOptions.Asynchronous | FileOptions.DeleteOnClose);
 
         return new SeekableStreamHandle(readStream, ownsStream: true);

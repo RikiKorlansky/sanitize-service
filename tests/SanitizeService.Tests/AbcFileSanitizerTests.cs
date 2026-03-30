@@ -6,7 +6,8 @@ namespace SanitizeService.Tests;
 
 public sealed class AbcFileSanitizerTests
 {
-    private readonly AbcFileSanitizer _sut = new(NullLogger<AbcFileSanitizer>.Instance);
+    private static readonly AbcSanitizationSettings Settings = AbcSanitizationSettings.Create("123", "789", 3, 1, 9);
+    private readonly AbcFileSanitizer _sut = new(Settings, NullLogger<AbcFileSanitizer>.Instance);
 
     private static MemoryStream ToSeekableStream(ReadOnlySpan<byte> data)
     {

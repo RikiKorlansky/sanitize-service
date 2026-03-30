@@ -1,18 +1,18 @@
-using System.Text;
 using Microsoft.Extensions.Logging;
 
 namespace SanitizeService.Domain;
 
 /// <summary>
-/// Detects ABC format when the first three bytes are ASCII "123".
+/// Detects ABC format using the configured header signature.
 /// </summary>
 public sealed class AbcFormatProbe : IFileFormatProbe
 {
-    private static ReadOnlySpan<byte> Header => "123"u8;
+    private readonly AbcSanitizationSettings _settings;
     private readonly ILogger<AbcFormatProbe> _logger;
 
-    public AbcFormatProbe(ILogger<AbcFormatProbe> logger)
+    public AbcFormatProbe(AbcSanitizationSettings settings, ILogger<AbcFormatProbe> logger)
     {
+        _settings = settings;
         _logger = logger;
     }
 
@@ -27,22 +27,23 @@ public sealed class AbcFormatProbe : IFileFormatProbe
         }
 
         stream.Position = 0;
-        var buffer = new byte[3];
-        var read = await stream.ReadAsync(buffer.AsMemory(0, 3), cancellationToken);
+        var headerLength = _settings.HeaderSignature.Length;
+        var buffer = new byte[headerLength];
+        var read = await stream.ReadAsync(buffer.AsMemory(0, headerLength), cancellationToken);
         stream.Position = 0;
 
-        if (read < 3)
+        if (read < headerLength)
         {
             _logger.LogDebug("ABC probe: stream shorter than header ({Read} bytes).", read);
             return null;
         }
 
-        if (!Header.SequenceEqual(buffer))
+        if (!buffer.AsSpan().SequenceEqual(_settings.HeaderSignature))
         {
             return null;
         }
 
-        _logger.LogDebug("ABC format detected from header {Header}.", Encoding.ASCII.GetString(buffer));
+        _logger.LogDebug("ABC format detected from configured header.");
         return FileFormat.Abc;
     }
 }

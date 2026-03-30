@@ -6,7 +6,6 @@ using SanitizeService.Api.Requests;
 namespace SanitizeService.Api.Controllers;
 
 [ApiController]
-[Route("")]
 public sealed class SanitizeController : ControllerBase
 {
     private readonly ISanitizationService _sanitizationService;
