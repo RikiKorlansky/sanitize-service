@@ -2,8 +2,8 @@ namespace SanitizeService.Domain;
 
 /// <summary>
 /// Format-specific sanitizer. Implementations read from the provided <see cref="Stream"/> and return a new stream
-/// containing sanitized output. Buffering the full input (or large portions of it) is permitted when needed for
-/// validation or format-specific processing; callers should assume memory use may scale with input size.
+/// containing sanitized output. The ABC sanitizer requires a seekable stream with a known length and processes the body
+/// in fixed-size chunks without loading the whole input; other formats may define different constraints.
 /// </summary>
 public interface IFileSanitizer
 {

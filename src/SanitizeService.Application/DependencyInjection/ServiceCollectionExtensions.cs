@@ -23,7 +23,8 @@ public static class ServiceCollectionExtensions
                 options.AbcFooterSignature,
                 options.AbcBlockSize,
                 options.AbcValidDigitMin,
-                options.AbcValidDigitMax);
+                options.AbcValidDigitMax,
+                options.MaxFileSizeBytes);
         });
 
         services.AddSingleton<IFileFormatProbe, AbcFormatProbe>();

@@ -6,7 +6,8 @@ namespace SanitizeService.Tests;
 
 public sealed class AbcFileSanitizerTests
 {
-    private static readonly AbcSanitizationSettings Settings = AbcSanitizationSettings.Create("123", "789", 3, 1, 9);
+    private static readonly AbcSanitizationSettings Settings =
+        AbcSanitizationSettings.Create("123", "789", 3, 1, 9, 100L * 1024 * 1024);
     private readonly AbcFileSanitizer _sut = new(Settings, NullLogger<AbcFileSanitizer>.Instance);
 
     private static MemoryStream ToSeekableStream(ReadOnlySpan<byte> data)
@@ -118,13 +119,13 @@ public sealed class AbcFileSanitizerTests
     }
 
     [Fact]
-    public async Task Non_seekable_stream_is_accepted_when_content_is_valid_abc()
+    public async Task Non_seekable_stream_throws_invalid_operation()
     {
         var inner = ToSeekableStream("123A1C789"u8);
         await using var nonSeek = new NonSeekableStreamWrapper(inner);
-        await using var output = await _sut.SanitizeAsync(nonSeek, CancellationToken.None);
-        var buf = await ReadAllAsync(output);
-        Assert.Equal("123A1C789"u8.ToArray(), buf);
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(async () =>
+            await _sut.SanitizeAsync(nonSeek, CancellationToken.None));
+        Assert.Contains("seekable", ex.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
