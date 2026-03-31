@@ -17,14 +17,15 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(sp =>
         {
-            var options = sp.GetRequiredService<IOptions<SanitizationOptions>>().Value;
+            var sanitization = sp.GetRequiredService<IOptions<SanitizationOptions>>().Value;
+            var abc = sp.GetRequiredService<IOptions<AbcOptions>>().Value;
             return AbcSanitizationSettings.Create(
-                options.AbcHeaderSignature,
-                options.AbcFooterSignature,
-                options.AbcBlockSize,
-                options.AbcValidDigitMin,
-                options.AbcValidDigitMax,
-                options.MaxFileSizeBytes);
+                abc.HeaderSignature,
+                abc.FooterSignature,
+                abc.BlockSize,
+                abc.ValidDigitMin,
+                abc.ValidDigitMax,
+                sanitization.MaxFileSizeBytes);
         });
 
         services.AddSingleton<IFileFormatProbe, AbcFormatProbe>();

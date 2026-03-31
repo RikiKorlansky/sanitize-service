@@ -32,11 +32,7 @@ public sealed class AbcFileSanitizer : IFileSanitizer
     /// </summary>
     public async Task<Stream> SanitizeAsync(Stream input, CancellationToken cancellationToken)
     {
-        if (!TryGetSeekableLength(input, out var totalLength))
-        {
-            throw new InvalidOperationException(
-                "ABC sanitization requires a seekable stream with a known length. Buffer the stream (e.g. via SeekableStreamEnsurer) before calling the sanitizer.");
-        }
+        var totalLength = GetRequiredSeekableLength(input);
 
         return await SanitizeForwardStreamingAsync(input, totalLength, cancellationToken);
     }
@@ -67,20 +63,7 @@ public sealed class AbcFileSanitizer : IFileSanitizer
                 $"ABC body (between header and footer) must be a whole number of {blockSize}-byte blocks. Body length={bodyLength}.");
         }
 
-        input.Position = 0;
-        var headerBuf = ArrayPool<byte>.Shared.Rent(headerLength);
-        try
-        {
-            await input.ReadExactlyAsync(headerBuf.AsMemory(0, headerLength), cancellationToken);
-            if (!headerBuf.AsSpan(0, headerLength).SequenceEqual(_settings.HeaderSignature))
-            {
-                throw new InvalidAbcStructureException("ABC header does not match the configured signature.");
-            }
-        }
-        finally
-        {
-            ArrayPool<byte>.Shared.Return(headerBuf);
-        }
+        await ValidateHeaderAsync(input, headerLength, cancellationToken);
 
         var tempPath = Path.GetTempFileName();
         var output = new FileStream(
@@ -105,19 +88,7 @@ public sealed class AbcFileSanitizer : IFileSanitizer
                 cancellationToken);
 
             // Tail: last footerLength bytes of the file, read sequentially after the body (not as ABC blocks).
-            var footerBuf = ArrayPool<byte>.Shared.Rent(footerLength);
-            try
-            {
-                await input.ReadExactlyAsync(footerBuf.AsMemory(0, footerLength), cancellationToken);
-                if (!footerBuf.AsSpan(0, footerLength).SequenceEqual(_settings.FooterSignature))
-                {
-                    throw new InvalidAbcStructureException("ABC footer does not match the configured signature.");
-                }
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(footerBuf);
-            }
+            await ValidateFooterAsync(input, footerLength, cancellationToken);
 
             await output.WriteAsync(_settings.FooterSignature, cancellationToken);
             await output.FlushAsync(cancellationToken);
@@ -236,6 +207,52 @@ public sealed class AbcFileSanitizer : IFileSanitizer
         catch (NotSupportedException)
         {
             return false;
+        }
+    }
+
+    private long GetRequiredSeekableLength(Stream input)
+    {
+        if (!TryGetSeekableLength(input, out var totalLength))
+        {
+            throw new InvalidOperationException(
+                "ABC sanitization requires a seekable stream with a known length. Buffer the stream (e.g. via SeekableStreamEnsurer) before calling the sanitizer.");
+        }
+
+        return totalLength;
+    }
+
+    private async Task ValidateHeaderAsync(Stream input, int headerLength, CancellationToken cancellationToken)
+    {
+        input.Position = 0;
+        var headerBuf = ArrayPool<byte>.Shared.Rent(headerLength);
+        try
+        {
+            await input.ReadExactlyAsync(headerBuf.AsMemory(0, headerLength), cancellationToken);
+            if (!headerBuf.AsSpan(0, headerLength).SequenceEqual(_settings.HeaderSignature))
+            {
+                throw new InvalidAbcStructureException("ABC header does not match the configured signature.");
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(headerBuf);
+        }
+    }
+
+    private async Task ValidateFooterAsync(Stream input, int footerLength, CancellationToken cancellationToken)
+    {
+        var footerBuf = ArrayPool<byte>.Shared.Rent(footerLength);
+        try
+        {
+            await input.ReadExactlyAsync(footerBuf.AsMemory(0, footerLength), cancellationToken);
+            if (!footerBuf.AsSpan(0, footerLength).SequenceEqual(_settings.FooterSignature))
+            {
+                throw new InvalidAbcStructureException("ABC footer does not match the configured signature.");
+            }
+        }
+        finally
+        {
+            ArrayPool<byte>.Shared.Return(footerBuf);
         }
     }
 
