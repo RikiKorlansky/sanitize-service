@@ -2,10 +2,10 @@
 
 ### Prerequisites
 
-- .NET 8 SDK
+- [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) (see `global.json` in the repo root for the pinned minimum version)
 - Docker (for containerized run)
 
-.NET 8 microservice that accepts uploads, detects file format from **content** (not the filename), runs format-specific sanitization, and returns the sanitized bytes.
+.NET 10 microservice that accepts uploads, detects file format from **content** (not the filename), runs format-specific sanitization, and returns the sanitized bytes.
 
 Main endpoint: `POST /sanitize`
 
@@ -69,6 +69,8 @@ Errors are returned as **Problem Details** (`application/problem+json`). Example
 The container listens on **port 8080** inside (`ASPNETCORE_URLS=http://+:8080`). Map a host port to **8080** (example below uses host **5000**, like the earlier README).
 
 1. **Build the Docker image**
+
+   Run this from the **repository root** (the directory that contains `SanitizeService.sln` and `Dockerfile`). The final `.` is the build context and must be that directory — **not** `..` (a parent context will not contain `src/` and `COPY` will fail).
 
    ```bash
    docker build -t sanitize-service .
